@@ -6,7 +6,10 @@
 </head>
 <body class="p-4">
     <div class="container">
-        <h1 class="mb-4">📦 Gestione Magazzino</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>📦 Gestione Magazzino</h1>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+        </div>
 
         <h4>Aggiungi nuovo prodotto</h4>
         <form method="POST" action="/aggiungi" class="row g-2 mb-4">

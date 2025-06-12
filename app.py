@@ -1,14 +1,13 @@
-from flask import Flask, render_template, request, redirect, session, url_for, render_template_string
+from flask import Flask, render_template, request, redirect, session, url_for
 import json
 import os
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'una_chiave_super_segreta'  # Cambiala con una tua chiave sicura
+app.secret_key = 'una_chiave_super_segreta_cambiala_subito'
 
 FILE_MAGAZZINO = "magazzino.json"
-
-# Credenziali login semplici
-PASSWORD = 'easyservice'
+PASSWORD = 'easyservice'  # Cambia questa password a piacere
 
 def carica_magazzino():
     if os.path.exists(FILE_MAGAZZINO):
@@ -20,43 +19,30 @@ def salva_magazzino(magazzino):
     with open(FILE_MAGAZZINO, "w") as f:
         json.dump(magazzino, f, indent=4)
 
-# Pagina login (usiamo template inline per semplicità)
-login_page = '''
-<!doctype html>
-<title>Login</title>
-<h2>Login</h2>
-<form method="post">
-  <input name="username" placeholder="Username" required>
-  <input name="password" type="password" placeholder="Password" required>
-  <input type="submit" value="Login">
-</form>
-'''
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if request.form['password'] == PASSWORD:
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            error = "Password errata, riprova."
-    return render_template("login.html", error=error)
-
-@app.route('/logout')
-def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
-
-# Decoratore per controllare il login sulle pagine protette
 def login_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('logged_in'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form.get('password') == PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            error = "Password errata, riprova."
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+@login_required
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
 
 @app.route("/")
 @login_required
@@ -83,31 +69,6 @@ def aggiorna():
     codice = request.form["codice"]
     tipo = request.form["tipo"]
     quantità = int(request.form["quantità"])
-
-    magazzino = carica_magazzino()
-    if codice in magazzino:
-        if tipo == "acquisto":
-            magazzino[codice]["quantità"] += quantità
-        elif tipo == "vendita":
-            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - quantità)
-        salva_magazzino(magazzino)
-    return redirect("/")
-
-@app.route("/scansione", methods=["POST"])
-@login_required
-def scansione():
-    codice_raw = request.form["codice"]
-    quantità = int(request.form["quantità"])
-
-    tipo = None
-    if codice_raw.startswith("A_"):
-        tipo = "acquisto"
-        codice = codice_raw[2:]
-    elif codice_raw.startswith("V_"):
-        tipo = "vendita"
-        codice = codice_raw[2:]
-    else:
-        return redirect("/")
 
     magazzino = carica_magazzino()
     if codice in magazzino:
