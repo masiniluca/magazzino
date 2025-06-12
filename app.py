@@ -34,13 +34,14 @@ login_page = '''
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         if request.form['password'] == PASSWORD:
             session['logged_in'] = True
             return redirect(url_for('index'))
         else:
-            return render_template_string(login_page + "<p style='color:red'>Credenziali errate</p>")
-    return render_template_string(login_page)
+            error = "Password errata, riprova."
+    return render_template("login.html", error=error)
 
 @app.route('/logout')
 def logout():
