@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestione Magazzino</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1 class="mb-4">📦 Gestione Magazzino</h1>
+
+        <h4>Scansione rapida con pistola barcode</h4>
+        <form method="POST" action="/scansione" class="d-flex gap-2 mb-4">
+            <input type="text" name="codice" placeholder="Scansiona codice prodotto" class="form-control" autofocus required>
+            <input type="number" name="quantità" placeholder="Quantità" class="form-control w-25" required>
+            <select name="tipo" class="form-select w-25">
+                <option value="acquisto">+ Acquisto</option>
+                <option value="vendita">− Vendita</option>
+            </select>
+            <button class="btn btn-warning">Scansiona</button>
+        </form>
+
+        <h4>Aggiungi nuovo prodotto</h4>
+        <form method="POST" action="/aggiungi" class="row g-2 mb-4">
+            <div class="col"><input type="text" name="codice" placeholder="Codice" class="form-control" required></div>
+            <div class="col"><input type="text" name="nome" placeholder="Nome" class="form-control" required></div>
+            <div class="col"><input type="number" name="quantità" placeholder="Quantità" class="form-control" required></div>
+            <div class="col"><button class="btn btn-primary">Aggiungi</button></div>
+        </form>
+
+        <h4>Gestione prodotti</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Codice</th>
+                    <th>Nome</th>
+                    <th>Quantità</th>
+                    <th>Operazioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for codice, info in magazzino.items() %}
+                <tr>
+                    <td>{{ codice }}</td>
+                    <td>{{ info.nome }}</td>
+                    <td>{{ info.quantità }}</td>
+                    <td>
+                        <form method="POST" action="/aggiorna" class="d-flex gap-2">
+                            <input type="hidden" name="codice" value="{{ codice }}">
+                            <select name="tipo" class="form-select w-25">
+                                <option value="acquisto">+ Acquisto</option>
+                                <option value="vendita">− Vendita</option>
+                            </select>
+                            <input type="number" name="quantità" min="1" class="form-control w-25" required>
+                            <button class="btn btn-success">Aggiorna</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
