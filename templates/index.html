@@ -1,63 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
-    <title>Gestione Magazzino</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Magazzino</title>
 </head>
-<body class="p-4">
-    <div class="container">
-        <h1 class="mb-4">📦 Gestione Magazzino</h1>
+<body>
+  <h1>Benvenuto nel Magazzino</h1>
 
-        <h4>Scansione rapida con pistola barcode</h4>
-        <form method="POST" action="/scansione" class="d-flex gap-2 mb-4">
-            <input type="text" name="codice" placeholder="Scansiona codice prodotto" class="form-control" autofocus required>
-            <input type="number" name="quantità" placeholder="Quantità" class="form-control w-25" required>
-            <select name="tipo" class="form-select w-25">
-                <option value="acquisto">+ Acquisto</option>
-                <option value="vendita">− Vendita</option>
-            </select>
-            <button class="btn btn-warning">Scansiona</button>
-        </form>
+  <p><a href="{{ url_for('logout') }}">Logout</a></p>
 
-        <h4>Aggiungi nuovo prodotto</h4>
-        <form method="POST" action="/aggiungi" class="row g-2 mb-4">
-            <div class="col"><input type="text" name="codice" placeholder="Codice" class="form-control" required></div>
-            <div class="col"><input type="text" name="nome" placeholder="Nome" class="form-control" required></div>
-            <div class="col"><input type="number" name="quantità" placeholder="Quantità" class="form-control" required></div>
-            <div class="col"><button class="btn btn-primary">Aggiungi</button></div>
-        </form>
+  <h2>Inventario</h2>
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>Codice</th>
+      <th>Nome</th>
+      <th>Quantità</th>
+    </tr>
+    {% for codice, prodotto in magazzino.items() %}
+    <tr>
+      <td>{{ codice }}</td>
+      <td>{{ prodotto.nome }}</td>
+      <td>{{ prodotto.quantità }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 
-        <h4>Gestione prodotti</h4>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Codice</th>
-                    <th>Nome</th>
-                    <th>Quantità</th>
-                    <th>Operazioni</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for codice, info in magazzino.items() %}
-                <tr>
-                    <td>{{ codice }}</td>
-                    <td>{{ info.nome }}</td>
-                    <td>{{ info.quantità }}</td>
-                    <td>
-                        <form method="POST" action="/aggiorna" class="d-flex gap-2">
-                            <input type="hidden" name="codice" value="{{ codice }}">
-                            <select name="tipo" class="form-select w-25">
-                                <option value="acquisto">+ Acquisto</option>
-                                <option value="vendita">− Vendita</option>
-                            </select>
-                            <input type="number" name="quantità" min="1" class="form-control w-25" required>
-                            <button class="btn btn-success">Aggiorna</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <h2>Aggiungi nuovo prodotto</h2>
+  <form method="post" action="/aggiungi">
+    <input type="text" name="codice" placeholder="Codice" required>
+    <input type="text" name="nome" placeholder="Nome" required>
+    <input type="number" name="quantità" placeholder="Quantità" min="1" required>
+    <input type="submit" value="Aggiungi">
+  </form>
+
+  <h2>Aggiorna quantità prodotto</h2>
+  <form method="post" action="/aggiorna">
+    <input type="text" name="codice" placeholder="Codice" required>
+    <select name="tipo" required>
+      <option value="acquisto">Acquisto (+)</option>
+      <option value="vendita">Vendita (-)</option>
+    </select>
+    <input type="number" name="quantità" placeholder="Quantità" min="1" required>
+    <input type="submit" value="Aggiorna">
+  </form>
+
+  <h2>Scansiona prodotto</h2>
+  <form method="post" action="/scansione">
+    <input type="text" name="codice" placeholder="Codice (es. A_12345 o V_12345)" required>
+    <input type="number" name="quantità" placeholder="Quantità" min="1" required>
+    <input type="submit" value="Scansiona">
+  </form>
 </body>
 </html>
