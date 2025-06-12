@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      background: white;
+      padding: 30px 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      text-align: center;
+      width: 320px;
+    }
+    h2 {
+      margin-bottom: 25px;
+      font-size: 28px;
+      color: #333;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 10px;
+      font-size: 18px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    input[type="password"]:focus {
+      border-color: #4a90e2;
+      outline: none;
+    }
+    input[type="submit"] {
+      width: 100%;
+      padding: 14px 0;
+      font-size: 18px;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    input[type="submit"]:hover {
+      background-color: #357ABD;
+    }
+    .error-msg {
+      color: #e74c3c;
+      font-weight: bold;
+      margin-top: -15px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Accedi</h2>
+    <form method="post">
+      <input type="password" name="password" placeholder="Inserisci la password" required autofocus>
+      {% if error %}
+        <div class="error-msg">{{ error }}</div>
+      {% endif %}
+      <input type="submit" value="Login">
+    </form>
+  </div>
+</body>
+</html>
