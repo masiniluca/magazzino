@@ -8,8 +8,7 @@ app.secret_key = 'una_chiave_super_segreta'  # Cambiala con una tua chiave sicur
 FILE_MAGAZZINO = "magazzino.json"
 
 # Credenziali login semplici
-USERNAME = 'admin'
-PASSWORD = 'mypass'
+PASSWORD = 'easyservice'
 
 def carica_magazzino():
     if os.path.exists(FILE_MAGAZZINO):
@@ -36,7 +35,7 @@ login_page = '''
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if request.form['username'] == USERNAME and request.form['password'] == PASSWORD:
+        if request.form['password'] == PASSWORD:
             session['logged_in'] = True
             return redirect(url_for('index'))
         else:
