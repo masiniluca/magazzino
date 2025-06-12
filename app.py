@@ -71,5 +71,9 @@ def scansione():
         salva_magazzino(magazzino)
     return redirect("/")
 
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Prende la porta da Render o usa 5000 di default
+    app.run(host="0.0.0.0", port=port, debug=True)
+
