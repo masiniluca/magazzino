@@ -88,8 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('prodotto-nome').textContent = data.nome;
                     document.getElementById('prodotto-codice').textContent = data.codice_barre;
                     document.getElementById('prodotto-quantita').textContent = data.quantita;
-                    document.getElementById('prodotto-prezzo').textContent = data.prezzo.toFixed(2);
-                    document.getElementById('prodotto-descrizione').textContent = data.descrizione;
                     
                     prodottoInfo.classList.remove('hidden');
                     nuovoProdottoForm.classList.add('hidden');
@@ -165,7 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${prodotto.codice_barre}</td>
                         <td>${prodotto.nome}</td>
                         <td>${prodotto.quantita}</td>
-                        <td>€${prodotto.prezzo.toFixed(2)}</td>
                         <td class="actions">
                             <button onclick="aggiungiDaTabella('${prodotto.codice_barre}')">+1</button>
                             <button onclick="rimuoviDaTabella('${prodotto.codice_barre}')">-1</button>

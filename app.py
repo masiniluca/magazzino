@@ -50,8 +50,6 @@ def get_prodotti():
             'nome': p[1],
             'codice_barre': p[2],
             'quantita': p[3],
-            'prezzo': p[4],
-            'descrizione': p[5]
         })
     
     return jsonify(result)
@@ -70,8 +68,6 @@ def get_prodotto(codice_barre):
             'nome': prodotto[1],
             'codice_barre': prodotto[2],
             'quantita': prodotto[3],
-            'prezzo': prodotto[4],
-            'descrizione': prodotto[5]
         })
     else:
         return jsonify({'error': 'Prodotto non trovato'}), 404
@@ -96,11 +92,11 @@ def aggiungi_prodotto():
             c.execute('UPDATE prodotti SET quantita = ? WHERE codice_barre = ?', (nuova_quantita, codice_barre))
         else:
             # Crea un nuovo prodotto (richiede tutti i campi)
-            if not all(k in data for k in ['nome', 'prezzo', 'descrizione']):
-                return jsonify({'error': 'Per nuovi prodotti sono richiesti nome, prezzo e descrizione'}), 400
+            if not all(k in data for k in ['nome']):
+                return jsonify({'error': 'Per nuovi prodotti inserire il nome'}), 400
                 
-            c.execute('INSERT INTO prodotti (nome, codice_barre, quantita, prezzo, descrizione) VALUES (?, ?, ?, ?, ?)',
-                      (data['nome'], codice_barre, quantita, data['prezzo'], data['descrizione']))
+            c.execute('INSERT INTO prodotti (nome, codice_barre, quantita) VALUES (?, ?, ?)',
+                      (data['nome'], codice_barre, quantita))
         
         conn.commit()
         conn.close()

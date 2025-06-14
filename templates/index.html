@@ -22,8 +22,6 @@
                 <p><strong>Nome:</strong> <span id="prodotto-nome"></span></p>
                 <p><strong>Codice:</strong> <span id="prodotto-codice"></span></p>
                 <p><strong>Quantità:</strong> <span id="prodotto-quantita"></span></p>
-                <p><strong>Prezzo:</strong> €<span id="prodotto-prezzo"></span></p>
-                <p><strong>Descrizione:</strong> <span id="prodotto-descrizione"></span></p>
             </div>
             <div id="nuovo-prodotto-form" class="hidden">
                 <h3>Nuovo Prodotto</h3>
@@ -31,8 +29,6 @@
                     <input type="text" name="nome" placeholder="Nome prodotto" required>
                     <input type="text" name="codice_barre" id="nuovo-codice" readonly required>
                     <input type="number" name="quantita" placeholder="Quantità" value="1" min="1" required>
-                    <input type="number" name="prezzo" placeholder="Prezzo" step="0.01" min="0" required>
-                    <textarea name="descrizione" placeholder="Descrizione"></textarea>
                     <button type="submit">Aggiungi Prodotto</button>
                 </form>
             </div>
@@ -46,8 +42,7 @@
                         <th>Codice</th>
                         <th>Nome</th>
                         <th>Quantità</th>
-                        <th>Prezzo</th>
-                        <th>Azioni</th>
+                        <th>Aggiungi/Vendi</th>
                     </tr>
                 </thead>
                 <tbody>
