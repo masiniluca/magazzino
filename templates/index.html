@@ -1,94 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Magazzino</title>
-    <meta charset="utf-8">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="bg-light p-4">
+<body>
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="text-primary">📦 Gestione Magazzino</h1>
-            <a href="/logout" class="btn btn-outline-danger">Logout</a>
+        <h1>Gestione Magazzino</h1>
+        
+        <div class="scanner-section">
+            <h2>Scanner Codice a Barre</h2>
+            <input type="text" id="barcode-input" placeholder="Scansiona codice a barre" autofocus>
+            <div class="button-group">
+                <button id="aggiungi-btn">Aggiungi (+1)</button>
+                <button id="rimuovi-btn">Rimuovi (-1)</button>
+            </div>
+            <div id="prodotto-info" class="hidden">
+                <h3>Informazioni Prodotto</h3>
+                <p><strong>Nome:</strong> <span id="prodotto-nome"></span></p>
+                <p><strong>Codice:</strong> <span id="prodotto-codice"></span></p>
+                <p><strong>Quantità:</strong> <span id="prodotto-quantita"></span></p>
+                <p><strong>Prezzo:</strong> €<span id="prodotto-prezzo"></span></p>
+                <p><strong>Descrizione:</strong> <span id="prodotto-descrizione"></span></p>
+            </div>
+            <div id="nuovo-prodotto-form" class="hidden">
+                <h3>Nuovo Prodotto</h3>
+                <form id="form-nuovo-prodotto">
+                    <input type="text" name="nome" placeholder="Nome prodotto" required>
+                    <input type="text" name="codice_barre" id="nuovo-codice" readonly required>
+                    <input type="number" name="quantita" placeholder="Quantità" value="1" min="1" required>
+                    <input type="number" name="prezzo" placeholder="Prezzo" step="0.01" min="0" required>
+                    <textarea name="descrizione" placeholder="Descrizione"></textarea>
+                    <button type="submit">Aggiungi Prodotto</button>
+                </form>
+            </div>
         </div>
-
-        <!-- Sezione scansione barcode -->
-        <h4>🔫 Scansione codice a barre</h4>
-        <form method="POST" action="/scansione" class="row g-2 mb-4">
-            <div class="col-md-8">
-                <input type="text" name="codice" placeholder="Esempio: A_123 o V_456" class="form-control" autofocus required>
-            </div>
-            <div class="col-md-4">
-                <button class="btn btn-warning w-100">Scansiona</button>
-            </div>
-        </form>
-
-        <!-- Aggiunta manuale -->
-        <h4>➕ Aggiungi nuovo prodotto</h4>
-        <form method="POST" action="/aggiungi" class="row g-2 mb-4">
-            <div class="col-md-3"><input type="text" name="codice" placeholder="Codice" class="form-control" required></div>
-            <div class="col-md-4"><input type="text" name="nome" placeholder="Nome" class="form-control" required></div>
-            <div class="col-md-3"><input type="number" name="quantità" placeholder="Quantità" class="form-control" required></div>
-            <div class="col-md-2"><button class="btn btn-primary w-100">Aggiungi</button></div>
-        </form>
-
-        <hr>
-        <h4>📲 Scansione codice a barre</h4>
-        <form method="POST" action="/scansione" class="row g-2 mb-4">
-            <div class="col-md-4">
-                <select name="tipo" class="form-select" required>
-                    <option value="">Seleziona azione...</option>
-                    <option value="acquisto">➕ Acquisto</option>
-                    <option value="vendita">➖ Vendita</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="text" name="codice" placeholder="Scansiona codice" class="form-control" autofocus required>
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="quantità" value="1" min="1" class="form-control" required>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-warning w-100">Scansiona</button>
-            </div>
-        </form>
-
-        <!-- Tabella prodotti -->
-        <h4>📋 Elenco prodotti</h4>
-        <table class="table table-striped table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>Codice</th>
-                    <th>Nome</th>
-                    <th>Quantità</th>
-                    <th>Operazioni</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for codice, info in magazzino.items() %}
-                <tr>
-                    <td>{{ codice }}</td>
-                    <td>{{ info.nome }}</td>
-                    <td>{{ info.quantità }}</td>
-                    <td>
-                        <form method="POST" action="/aggiorna" class="d-flex flex-wrap gap-2">
-                            <input type="hidden" name="codice" value="{{ codice }}">
-                            <select name="tipo" class="form-select w-auto">
-                                <option value="acquisto">+ Acquisto</option>
-                                <option value="vendita">− Vendita</option>
-                            </select>
-                            <input type="number" name="quantità" min="1" class="form-control w-auto" required>
-                            <button class="btn btn-success">Aggiorna</button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">Nessun prodotto presente.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        
+        <div class="inventario-section">
+            <h2>Inventario</h2>
+            <table id="inventario-table">
+                <thead>
+                    <tr>
+                        <th>Codice</th>
+                        <th>Nome</th>
+                        <th>Quantità</th>
+                        <th>Prezzo</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Popolato da JavaScript -->
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script src="/static/script.js"></script>
 </body>
 </html>

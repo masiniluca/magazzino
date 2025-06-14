@@ -1,132 +1,153 @@
-from flask import Flask, render_template, request, redirect, session, url_for, render_template_string
-import json
+from flask import Flask, render_template, request, jsonify
+import sqlite3
 import os
-from functools import wraps
-from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'una_chiave_super_segreta'  # Cambiala con una tua chiave sicura
 
-FILE_MAGAZZINO = "magazzino.json"
-FILE_LOG = "log.txt"
-PASSWORD = 'easyservice'  # Password di accesso
+# Inizializza il database
+def init_db():
+    if not os.path.exists('database.db'):
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE prodotti
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      nome TEXT NOT NULL,
+                      codice_barre TEXT UNIQUE NOT NULL,
+                      quantita INTEGER NOT NULL,
+                      prezzo REAL,
+                      descrizione TEXT)''')
+        
+        # Aggiungi alcuni prodotti di esempio
+        prodotti_di_esempio = [
+            ('Prodotto A', '123456789012', 10, 9.99, 'Descrizione prodotto A'),
+            ('Prodotto B', '987654321098', 5, 19.99, 'Descrizione prodotto B'),
+            ('Prodotto C', '456789012345', 20, 4.99, 'Descrizione prodotto C')
+        ]
+        
+        c.executemany('INSERT INTO prodotti (nome, codice_barre, quantita, prezzo, descrizione) VALUES (?, ?, ?, ?, ?)', prodotti_di_esempio)
+        conn.commit()
+        conn.close()
 
-# ------------------- Funzioni di utilità -------------------
+init_db()
 
-def carica_magazzino():
-    if os.path.exists(FILE_MAGAZZINO):
-        with open(FILE_MAGAZZINO, "r") as f:
-            return json.load(f)
-    return {}
-
-def salva_magazzino(magazzino):
-    with open(FILE_MAGAZZINO, "w") as f:
-        json.dump(magazzino, f, indent=4)
-
-def scrivi_log(codice, operazione, quantità):
-    with open(FILE_LOG, "a") as f:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        f.write(f"[{timestamp}] {operazione.upper()}: {codice} - Quantità: {quantità}\n")
-
-# ------------------- Autenticazione -------------------
-
-login_page = '''
-<!doctype html>
-<html>
-<head><title>Login</title></head>
-<body style="display:flex; justify-content:center; align-items:center; height:100vh; background:#f5f5f5;">
-    <form method="post" style="background:white; padding:2rem; border-radius:1rem; box-shadow:0 0 10px rgba(0,0,0,0.1);">
-        <h2 style="text-align:center;">🔐 Accesso</h2>
-        <input name="password" type="password" placeholder="Password" class="form-control mb-3" required style="width:100%; padding:0.5rem;">
-        <button type="submit" class="btn btn-primary" style="width:100%;">Accedi</button>
-        {{ errore }}
-    </form>
-</body>
-</html>
-'''
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    errore = ""
-    if request.method == 'POST':
-        if request.form['password'] == PASSWORD:
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            errore = "<p style='color:red; text-align:center;'>Credenziali errate</p>"
-    return render_template_string(login_page, errore=errore)
-
-@app.route('/logout')
-def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('logged_in'):
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# ------------------- Rotte principali -------------------
-
-@app.route("/")
-@login_required
+@app.route('/')
 def index():
-    magazzino = carica_magazzino()
-    return render_template("index.html", magazzino=magazzino)
+    return render_template('index.html')
 
-@app.route("/aggiungi", methods=["POST"])
-@login_required
-def aggiungi():
-    codice = request.form["codice"]
-    nome = request.form["nome"]
-    quantità = int(request.form["quantità"])
+@app.route('/api/prodotti', methods=['GET'])
+def get_prodotti():
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM prodotti')
+    prodotti = c.fetchall()
+    conn.close()
+    
+    # Converti in lista di dizionari
+    result = []
+    for p in prodotti:
+        result.append({
+            'id': p[0],
+            'nome': p[1],
+            'codice_barre': p[2],
+            'quantita': p[3],
+            'prezzo': p[4],
+            'descrizione': p[5]
+        })
+    
+    return jsonify(result)
 
-    magazzino = carica_magazzino()
-    if codice not in magazzino:
-        magazzino[codice] = {"nome": nome, "quantità": quantità}
-        salva_magazzino(magazzino)
-        scrivi_log(codice, "aggiunta", quantità)
-    return redirect("/")
+@app.route('/api/prodotto/<codice_barre>', methods=['GET'])
+def get_prodotto(codice_barre):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM prodotti WHERE codice_barre = ?', (codice_barre,))
+    prodotto = c.fetchone()
+    conn.close()
+    
+    if prodotto:
+        return jsonify({
+            'id': prodotto[0],
+            'nome': prodotto[1],
+            'codice_barre': prodotto[2],
+            'quantita': prodotto[3],
+            'prezzo': prodotto[4],
+            'descrizione': prodotto[5]
+        })
+    else:
+        return jsonify({'error': 'Prodotto non trovato'}), 404
 
-@app.route("/aggiorna", methods=["POST"])
-@login_required
-def aggiorna():
-    codice = request.form["codice"]
-    tipo = request.form["tipo"]
-    quantità = int(request.form["quantità"])
+@app.route('/api/prodotto/aggiungi', methods=['POST'])
+def aggiungi_prodotto():
+    data = request.json
+    codice_barre = data.get('codice_barre')
+    quantita = data.get('quantita', 1)
+    
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    
+    try:
+        # Verifica se il prodotto esiste già
+        c.execute('SELECT quantita FROM prodotti WHERE codice_barre = ?', (codice_barre,))
+        risultato = c.fetchone()
+        
+        if risultato:
+            # Aggiorna la quantità
+            nuova_quantita = risultato[0] + quantita
+            c.execute('UPDATE prodotti SET quantita = ? WHERE codice_barre = ?', (nuova_quantita, codice_barre))
+        else:
+            # Crea un nuovo prodotto (richiede tutti i campi)
+            if not all(k in data for k in ['nome', 'prezzo', 'descrizione']):
+                return jsonify({'error': 'Per nuovi prodotti sono richiesti nome, prezzo e descrizione'}), 400
+                
+            c.execute('INSERT INTO prodotti (nome, codice_barre, quantita, prezzo, descrizione) VALUES (?, ?, ?, ?, ?)',
+                      (data['nome'], codice_barre, quantita, data['prezzo'], data['descrizione']))
+        
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
 
-    magazzino = carica_magazzino()
-    if codice in magazzino:
-        if tipo == "acquisto":
-            magazzino[codice]["quantità"] += quantità
-        elif tipo == "vendita":
-            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - quantità)
-        salva_magazzino(magazzino)
-        scrivi_log(codice, tipo, quantità)
-    return redirect("/")
+@app.route('/api/prodotto/rimuovi', methods=['POST'])
+def rimuovi_prodotto():
+    data = request.json
+    codice_barre = data.get('codice_barre')
+    quantita = data.get('quantita', 1)
+    
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    
+    try:
+        # Verifica se il prodotto esiste
+        c.execute('SELECT quantita FROM prodotti WHERE codice_barre = ?', (codice_barre,))
+        risultato = c.fetchone()
+        
+        if not risultato:
+            conn.close()
+            return jsonify({'error': 'Prodotto non trovato'}), 404
+            
+        quantita_attuale = risultato[0]
+        
+        if quantita_attuale < quantita:
+            conn.close()
+            return jsonify({'error': 'Quantità insufficiente in magazzino'}), 400
+            
+        nuova_quantita = quantita_attuale - quantita
+        
+        if nuova_quantita <= 0:
+            # Rimuovi il prodotto se la quantità è 0
+            c.execute('DELETE FROM prodotti WHERE codice_barre = ?', (codice_barre,))
+        else:
+            # Aggiorna la quantità
+            c.execute('UPDATE prodotti SET quantita = ? WHERE codice_barre = ?', (nuova_quantita, codice_barre))
+        
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
 
-@app.route("/scansione", methods=["POST"])
-@login_required
-def scansione():
-    codice = request.form["codice"]
-    quantità = int(request.form["quantità"])
-    tipo = request.form["tipo"]
-
-    magazzino = carica_magazzino()
-    if codice in magazzino:
-        if tipo == "acquisto":
-            magazzino[codice]["quantità"] += quantità
-        elif tipo == "vendita":
-            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - quantità)
-        salva_magazzino(magazzino)
-    return redirect("/")
-
-
-# ------------------- Avvio -------------------
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
