@@ -111,28 +111,19 @@ def aggiorna():
 @app.route("/scansione", methods=["POST"])
 @login_required
 def scansione():
-    codice_raw = request.form["codice"].strip()
+    codice = request.form["codice"]
+    quantità = int(request.form["quantità"])
+    tipo = request.form["tipo"]
+
     magazzino = carica_magazzino()
-
-    if codice_raw.startswith("A_"):
-        codice = codice_raw[2:]
-        if codice in magazzino:
-            magazzino[codice]["quantità"] += 1
-        else:
-            magazzino[codice] = {"nome": f"Prodotto {codice}", "quantità": 1}
+    if codice in magazzino:
+        if tipo == "acquisto":
+            magazzino[codice]["quantità"] += quantità
+        elif tipo == "vendita":
+            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - quantità)
         salva_magazzino(magazzino)
-        scrivi_log(codice, "acquisto (scansione)", 1)
-
-    elif codice_raw.startswith("V_"):
-        codice = codice_raw[2:]
-        if codice in magazzino:
-            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - 1)
-        else:
-            magazzino[codice] = {"nome": f"Prodotto {codice}", "quantità": 0}
-        salva_magazzino(magazzino)
-        scrivi_log(codice, "vendita (scansione)", 1)
-
     return redirect("/")
+
 
 # ------------------- Avvio -------------------
 

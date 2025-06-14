@@ -32,6 +32,27 @@
             <div class="col-md-2"><button class="btn btn-primary w-100">Aggiungi</button></div>
         </form>
 
+        <hr>
+        <h4>📲 Scansione codice a barre</h4>
+        <form method="POST" action="/scansione" class="row g-2 mb-4">
+            <div class="col-md-4">
+                <select name="tipo" class="form-select" required>
+                    <option value="">Seleziona azione...</option>
+                    <option value="acquisto">➕ Acquisto</option>
+                    <option value="vendita">➖ Vendita</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="codice" placeholder="Scansiona codice" class="form-control" autofocus required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="quantità" value="1" min="1" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-warning w-100">Scansiona</button>
+            </div>
+        </form>
+
         <!-- Tabella prodotti -->
         <h4>📋 Elenco prodotti</h4>
         <table class="table table-striped table-bordered">
