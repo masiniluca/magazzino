@@ -2,26 +2,40 @@
 <html>
 <head>
     <title>Gestione Magazzino</title>
+    <meta charset="utf-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="p-4">
+<body class="bg-light p-4">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>📦 Gestione Magazzino</h1>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+            <h1 class="text-primary">📦 Gestione Magazzino</h1>
+            <a href="/logout" class="btn btn-outline-danger">Logout</a>
         </div>
 
-        <h4>Aggiungi nuovo prodotto</h4>
-        <form method="POST" action="/aggiungi" class="row g-2 mb-4">
-            <div class="col"><input type="text" name="codice" placeholder="Codice" class="form-control" required></div>
-            <div class="col"><input type="text" name="nome" placeholder="Nome" class="form-control" required></div>
-            <div class="col"><input type="number" name="quantità" placeholder="Quantità" class="form-control" required></div>
-            <div class="col"><button class="btn btn-primary">Aggiungi</button></div>
+        <!-- Sezione scansione barcode -->
+        <h4>🔫 Scansione codice a barre</h4>
+        <form method="POST" action="/scansione" class="row g-2 mb-4">
+            <div class="col-md-8">
+                <input type="text" name="codice" placeholder="Esempio: A_123 o V_456" class="form-control" autofocus required>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-warning w-100">Scansiona</button>
+            </div>
         </form>
 
-        <h4>Gestione prodotti</h4>
-        <table class="table table-bordered">
-            <thead>
+        <!-- Aggiunta manuale -->
+        <h4>➕ Aggiungi nuovo prodotto</h4>
+        <form method="POST" action="/aggiungi" class="row g-2 mb-4">
+            <div class="col-md-3"><input type="text" name="codice" placeholder="Codice" class="form-control" required></div>
+            <div class="col-md-4"><input type="text" name="nome" placeholder="Nome" class="form-control" required></div>
+            <div class="col-md-3"><input type="number" name="quantità" placeholder="Quantità" class="form-control" required></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100">Aggiungi</button></div>
+        </form>
+
+        <!-- Tabella prodotti -->
+        <h4>📋 Elenco prodotti</h4>
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
                 <tr>
                     <th>Codice</th>
                     <th>Nome</th>
@@ -36,16 +50,20 @@
                     <td>{{ info.nome }}</td>
                     <td>{{ info.quantità }}</td>
                     <td>
-                        <form method="POST" action="/aggiorna" class="d-flex gap-2">
+                        <form method="POST" action="/aggiorna" class="d-flex flex-wrap gap-2">
                             <input type="hidden" name="codice" value="{{ codice }}">
-                            <select name="tipo" class="form-select w-25">
+                            <select name="tipo" class="form-select w-auto">
                                 <option value="acquisto">+ Acquisto</option>
                                 <option value="vendita">− Vendita</option>
                             </select>
-                            <input type="number" name="quantità" min="1" class="form-control w-25" required>
+                            <input type="number" name="quantità" min="1" class="form-control w-auto" required>
                             <button class="btn btn-success">Aggiorna</button>
                         </form>
                     </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Nessun prodotto presente.</td>
                 </tr>
                 {% endfor %}
             </tbody>

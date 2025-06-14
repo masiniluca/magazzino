@@ -1,13 +1,17 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, render_template_string
 import json
 import os
 from functools import wraps
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'una_chiave_super_segreta_cambiala_subito'
+app.secret_key = 'una_chiave_super_segreta'  # Cambiala con una tua chiave sicura
 
 FILE_MAGAZZINO = "magazzino.json"
-PASSWORD = 'easyservice'  # Cambia questa password a piacere
+FILE_LOG = "log.txt"
+PASSWORD = 'easyservice'  # Password di accesso
+
+# ------------------- Funzioni di utilità -------------------
 
 def carica_magazzino():
     if os.path.exists(FILE_MAGAZZINO):
@@ -19,6 +23,44 @@ def salva_magazzino(magazzino):
     with open(FILE_MAGAZZINO, "w") as f:
         json.dump(magazzino, f, indent=4)
 
+def scrivi_log(codice, operazione, quantità):
+    with open(FILE_LOG, "a") as f:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f"[{timestamp}] {operazione.upper()}: {codice} - Quantità: {quantità}\n")
+
+# ------------------- Autenticazione -------------------
+
+login_page = '''
+<!doctype html>
+<html>
+<head><title>Login</title></head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; background:#f5f5f5;">
+    <form method="post" style="background:white; padding:2rem; border-radius:1rem; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+        <h2 style="text-align:center;">🔐 Accesso</h2>
+        <input name="password" type="password" placeholder="Password" class="form-control mb-3" required style="width:100%; padding:0.5rem;">
+        <button type="submit" class="btn btn-primary" style="width:100%;">Accedi</button>
+        {{ errore }}
+    </form>
+</body>
+</html>
+'''
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    errore = ""
+    if request.method == 'POST':
+        if request.form['password'] == PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            errore = "<p style='color:red; text-align:center;'>Credenziali errate</p>"
+    return render_template_string(login_page, errore=errore)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -27,22 +69,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if request.form.get('password') == PASSWORD:
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            error = "Password errata, riprova."
-    return render_template('login.html', error=error)
-
-@app.route('/logout')
-@login_required
-def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
+# ------------------- Rotte principali -------------------
 
 @app.route("/")
 @login_required
@@ -61,6 +88,7 @@ def aggiungi():
     if codice not in magazzino:
         magazzino[codice] = {"nome": nome, "quantità": quantità}
         salva_magazzino(magazzino)
+        scrivi_log(codice, "aggiunta", quantità)
     return redirect("/")
 
 @app.route("/aggiorna", methods=["POST"])
@@ -77,7 +105,36 @@ def aggiorna():
         elif tipo == "vendita":
             magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - quantità)
         salva_magazzino(magazzino)
+        scrivi_log(codice, tipo, quantità)
     return redirect("/")
+
+@app.route("/scansione", methods=["POST"])
+@login_required
+def scansione():
+    codice_raw = request.form["codice"].strip()
+    magazzino = carica_magazzino()
+
+    if codice_raw.startswith("A_"):
+        codice = codice_raw[2:]
+        if codice in magazzino:
+            magazzino[codice]["quantità"] += 1
+        else:
+            magazzino[codice] = {"nome": f"Prodotto {codice}", "quantità": 1}
+        salva_magazzino(magazzino)
+        scrivi_log(codice, "acquisto (scansione)", 1)
+
+    elif codice_raw.startswith("V_"):
+        codice = codice_raw[2:]
+        if codice in magazzino:
+            magazzino[codice]["quantità"] = max(0, magazzino[codice]["quantità"] - 1)
+        else:
+            magazzino[codice] = {"nome": f"Prodotto {codice}", "quantità": 0}
+        salva_magazzino(magazzino)
+        scrivi_log(codice, "vendita (scansione)", 1)
+
+    return redirect("/")
+
+# ------------------- Avvio -------------------
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
