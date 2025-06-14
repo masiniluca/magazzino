@@ -17,6 +17,11 @@
                 <button id="aggiungi-btn">Aggiungi (+1)</button>
                 <button id="rimuovi-btn">Rimuovi (-1)</button>
             </div>
+            <td class="actions">
+    <button onclick="aggiungiDaTabella('${prodotto.codice_barre}')">+1</button>
+    <button onclick="rimuoviDaTabella('${prodotto.codice_barre}')">-1</button>
+    <button class="delete-btn" onclick="eliminaDaTabella('${prodotto.codice_barre}')">Elimina</button>
+</td>
             <div id="prodotto-info" class="hidden">
                 <h3>Informazioni Prodotto</h3>
                 <p><strong>Nome:</strong> <span id="prodotto-nome"></span></p>

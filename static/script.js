@@ -150,6 +150,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    window.eliminaDaTabella = function(codice) {
+    if (confirm('Sei sicuro di voler eliminare definitivamente questo prodotto?')) {
+        fetch(`/api/prodotto/elimina/${codice}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Errore nella cancellazione');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Prodotto eliminato con successo!');
+                loadInventario();
+            }
+        })
+        .catch(error => {
+            alert('Errore: ' + error.message);
+        });
+    }
+};
     // Funzione per caricare l'inventario
     function loadInventario() {
         fetch('/api/prodotti')

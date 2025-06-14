@@ -116,3 +116,11 @@ table tr:hover {
     padding: 5px 10px;
     font-size: 14px;
 }
+
+.delete-btn {
+    background: #d9534f;
+}
+
+.delete-btn:hover {
+    background: #c9302c;
+}

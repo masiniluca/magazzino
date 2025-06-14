@@ -145,6 +145,24 @@ def rimuovi_prodotto():
         conn.close()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/prodotto/elimina/<codice_barre>', methods=['DELETE'])
+def elimina_prodotto(codice_barre):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    
+    try:
+        c.execute('DELETE FROM prodotti WHERE codice_barre = ?', (codice_barre,))
+        conn.commit()
+        if c.rowcount == 0:
+            conn.close()
+            return jsonify({'error': 'Prodotto non trovato'}), 404
+            
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
